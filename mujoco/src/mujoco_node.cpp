@@ -234,6 +234,8 @@ namespace
     char filename[mj::Simulate::kMaxFilenameLength];
     mju::strcpy_arr(filename, file);
 
+    RCLCPP_INFO(rclcpp::get_logger("MuJoCo"), "load model from: %s\n", filename);
+
     // make sure filename is not empty
     if (!filename[0])
     {
@@ -327,6 +329,10 @@ namespace
     // run until asked to exit
     while (!sim.exitrequest.load())
     {
+      if (!rclcpp::ok())
+      {
+        sim.exitrequest.store(true);
+      }
       if (sim.droploadrequest.load())
       {
         sim.LoadMessage(sim.dropfilename);
@@ -439,6 +445,8 @@ namespace
               syncCPU = startCPU;
               syncSim = d->time;
               sim.speed_changed = false;
+
+              apply_ctrl(m, d);
 
               // run single step, let next iteration deal with timing
               mj_step(m, d);
